@@ -49,12 +49,16 @@ function App() {
 
   const [quoteOptions, setQuoteOptions] = useState({
     subtotal: 0,
-    vat: 0.16,
+    vat: 0.08,
     total: 0, 
-    privacy: false,
+    privacy: 'private',
     password: '',
     notes: '',
   });
+
+  function print() {
+    window.print();
+  }
 
 
   useEffect(() => {
@@ -68,13 +72,19 @@ function App() {
       setClientDetails(window.vz_user_quote.client_details);
     }
     if (window?.vz_user_quote?.options) {
-      setQuoteOptions(window.vz_user_quote.options);
+      const vatNumber = window?.vz_user_quote?.company_details?.company_vat_number;
+      const quoteOptions = window.vz_user_quote.options;
+      if (!isNaN(vatNumber)) {
+        quoteOptions.vat = vatNumber;
+      }
+      setQuoteOptions(quoteOptions);
     }
+
     if (window?.vz_user_quote?.quote) {
       setQuote(window.vz_user_quote.quote);
     }
     console.log(window.vz_user_quote);
-  }, []);
+  }, [window]);
 
   function _(string) {
     if (!language_strings[string])
@@ -234,6 +244,9 @@ function App() {
           </div>
         </section>
         <div className="vz-quote__actions">
+          <button className="button btn-secondary" onClick={() => print()}>
+            {_('print')}
+          </button>
           <button className="button btn-secondary" onClick={() => saveChanges()}>
             {_('save-changes')}
           </button>
@@ -333,7 +346,7 @@ function App() {
           {
             productList.length === 0 &&
             <li className="product-list__item">
-              <p>{_('add-pr')}</p>
+              <p>{_('add-product-to-start')}</p>
             </li>
           }
           {
@@ -382,14 +395,21 @@ function App() {
       <div className="split-container">        
       <section className="vz-quote__options">
         <h2>{_('options')}</h2>
+        {window?.vz_user_quote?.can_edit_vat &&
+        <QuoteInput type="number"
+                    title={_('vat')}
+                    value={quoteOptions.vat * 100}
+                    onChange={(e) => setQuoteOptions({ ...quoteOptions, vat: e / 100 })} />
+                    
+        }
         <QuoteInput type="textarea"
                     title={_('notes')}
                     value={quoteOptions.notes}
                     onChange={(e) => setQuoteOptions({ ...quoteOptions, notes: e })} />
-        <h4>
-          {_('quote-privacy-header')}
-        </h4>
         <div className="privacy-options">
+          <h4>
+            {_('quote-privacy-header')}
+          </h4>
           <label>
             <input type="radio" 
                   checked={quoteOptions.privacy == 'public'} 
@@ -411,9 +431,9 @@ function App() {
           }
           <label>
             <input type="radio" 
-                  checked={!quoteOptions.privacy} 
+                  checked={quoteOptions.privacy == 'private'} 
                   value="private"
-                  onChange={(e) => setQuoteOptions({ ...quoteOptions, privacy: false })} />
+                  onChange={(e) => setQuoteOptions({ ...quoteOptions, privacy: "private" })} />
             {_('private')}
           </label>
         </div>
@@ -439,7 +459,7 @@ function App() {
           </button>
 
         </section>
-        <section className="author-details">
+        <section className="vz-quote__author">
             <h2>
               {_('last-edit-by')}
             </h2>

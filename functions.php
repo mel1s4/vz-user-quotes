@@ -99,10 +99,27 @@ add_shortcode( 'vz-user-quotes', 'vz_user_quote_shortcode' );
 
 function vz_user_quote_template_override($template) {
   if (is_singular('vz-user-quotes')) {
-    $plugin_template = plugin_dir_path(__FILE__) . 'components/single-vz-user-quotes.php';
-    if (file_exists($plugin_template)) {
-      return $plugin_template;
-    }
+    if (
+        current_user_can('edit_post', get_the_ID()) ||
+        get_post_field('post_name') === 'new' ||
+        get_post_meta(get_the_ID(), 'user_id', true) === get_current_user_id() ||
+        get_post_meta(get_the_ID(), 'vz-quote-privacy', true) === 'public' ||
+        get_post_meta(get_the_ID(), 'vz-quote-privacy', true) === 'password'
+      )
+      {
+        $plugin_template = plugin_dir_path(__FILE__) . 'components/single-vz-user-quotes.php';
+        if (file_exists($plugin_template)) {
+          return $plugin_template;
+        }
+      } else {
+        // redirect to 404
+        global $wp_query;
+        $wp_query->set_404();
+        status_header(404);
+        nocache_headers();
+        include( get_query_template( '404' ) );
+        die();
+      }
   }
   return $template;
 }
@@ -145,36 +162,60 @@ function vz_get_react_component_resources() {
 
 function vz_user_quote_enqueue_scripts() {
   wp_enqueue_style('vz-user-quotes-archive-style', plugin_dir_url(__FILE__) . 'style.css', array(), '1.0.0', 'all');
+
+  
   if (is_singular('vz-user-quotes')) {
-    // get any file with the format main.[a-Z0-9]*.css
+    $privacy_option = get_post_meta(get_the_ID(), 'vz-quote-privacy', true);
+    $privacy_password = get_post_meta(get_the_ID(), 'vz-quote-privacy__password', true);
     $files = vz_get_react_component_resources();
     wp_enqueue_style('vz-user-quote-style', plugin_dir_url(__FILE__) . 'vz-user-quote-single/build/static/css/' . $files['css'], array(), '1.0.0', 'all');
     wp_enqueue_script('vz-user-quote', plugin_dir_url(__FILE__) . 'vz-user-quote-single/build/static/js/' . $files['js'], array('wp-element'), '0.0.1', true);
-    $params = [
-      'nonce' => wp_create_nonce('wp_rest'),
-      'rest_url' => esc_url_raw(rest_url()),
-      'lost_password_url' => vz_quote_lost_password_url(),
-      'quote_slug' => get_post_field('post_name'),
-      'author_name' => get_the_author_meta('display_name'),
-      'last_edit' => get_the_modified_date(),
-      'created_at' => get_the_date(),
-      'company_details' => get_option('vz-user-quotes-settings'),
-      'company_logo' => get_option('vz-user-quotes-settings')['company_logo'],
-      'client_details' => get_post_meta(get_the_ID(), 'vz-quote-client', true),
-      'products' => get_post_meta(get_the_ID(), 'vz-quote-products', true),
-      'options' => array(
-        'subtotal' => get_post_meta(get_the_ID(), 'vz-quote-subtotal', true),
-        'vat' => get_post_meta(get_the_ID(), 'vz-quote-vat', true),
-        'total' => get_post_meta(get_the_ID(), 'vz-quote-total', true),
-        'notes' => get_post_meta(get_the_ID(), 'vz-quote-notes', true),
-        'privacy' => get_post_meta(get_the_ID(), 'vz-quote-privacy', true),
-        'password' => get_post_meta(get_the_ID(), 'vz-quote-privacy__password', true),
-      ),
-    ];
-    // check if woocommerce is installed
-    if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
-      $params['woocommerce'] = true;
-      $params['woocommerce_cart_contents'] = vz_get_cart_contents();
+
+    if (
+      current_user_can('edit_post', get_the_ID()) ||
+      get_post_field('post_name') === 'new' ||
+      get_post_meta(get_the_ID(), 'user_id', true) === get_current_user_id() ||
+      get_post_meta(get_the_ID(), 'vz-quote-privacy', true) === 'public' ||
+      (
+        get_post_meta(get_the_ID(), 'vz-quote-privacy', true) === 'password' &&
+        isset($_POST['vz-quote-password']) &&
+        md5($_POST['vz-quote-password']) === $privacy_password
+      )
+    ) {
+      $params = [
+        'nonce' => wp_create_nonce('wp_rest'),
+        'rest_url' => esc_url_raw(rest_url()),
+        'lost_password_url' => vz_quote_lost_password_url(),
+        'quote_slug' => get_post_field('post_name'),
+        'author_name' => get_the_author_meta('display_name'),
+        'last_edit' => get_the_modified_date(),
+        'created_at' => get_the_date(),
+        'company_details' => get_option('vz-user-quotes-settings'),
+        'company_logo' => get_option('vz-user-quotes-settings')['company_logo'],
+        'client_details' => get_post_meta(get_the_ID(), 'vz-quote-client', true),
+        'products' => get_post_meta(get_the_ID(), 'vz-quote-products', true),
+        'can_edit_vat' => current_user_can('edit_post', get_the_ID()),
+        'current_user_id' => get_current_user_id(),
+        'options' => array(
+          'subtotal' => get_post_meta(get_the_ID(), 'vz-quote-subtotal', true),
+          'vat' => get_post_meta(get_the_ID(), 'vz-quote-vat', true),
+          'total' => get_post_meta(get_the_ID(), 'vz-quote-total', true),
+          'notes' => get_post_meta(get_the_ID(), 'vz-quote-notes', true),
+          'privacy' => $privacy_option,
+          'password' => $privacy_password,
+        ),
+      ];
+      // check if woocommerce is installed
+      if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
+        $params['woocommerce'] = true;
+        $params['woocommerce_cart_contents'] = vz_get_cart_contents();
+      }
+    } else {
+      $params = [
+        'locked' => true,
+        'company_details' => get_option('vz-user-quotes-settings'),
+        'company_logo' => get_option('vz-user-quotes-settings')['company_logo'],
+      ];
     }
     wp_localize_script('vz-user-quote', 'vz_user_quote', $params);
   }
@@ -389,7 +430,9 @@ function vz_user_quote_save( WP_REST_Request $request ) {
   update_post_meta($quote_id, 'vz-quote-client', $client);
   
   update_post_meta($quote_id, 'vz-quote-subtotal', $options['subtotal']);
-  update_post_meta($quote_id, 'vz-quote-vat', $options['vat']);
+  if (current_user_can('edit_post', $quote_id)) {
+    update_post_meta($quote_id, 'vz-quote-vat', $options['vat']);
+  }
   update_post_meta($quote_id, 'vz-quote-total', $options['total']);
   update_post_meta($quote_id, 'vz-quote-notes', $options['notes']);
   update_post_meta($quote_id, 'vz-quote-privacy', $options['privacy']);

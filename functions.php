@@ -3,8 +3,8 @@
 /**
  * Plugin Name: Viroz User Quotes
  * Plugin URI: https://viroz.studio/portfolio/user-quotes/
- * Description: Creates a new post type for a community directory. Registered users may submit a new community listing and rate existing listings.
- * Version: 0.0.1
+ * Description: Creates a new post type for user quotes and allows users to create, edit and download their quotes.
+ * Version: 0.5.0
  * Author: Melisa Viroz
  * Author URI: https://melisaviroz.com
  * License: GPL-2.0+
@@ -97,12 +97,20 @@ function vz_user_quote_shortcode() {
 }
 add_shortcode( 'vz-user-quotes', 'vz_user_quote_shortcode' );
 
+function vz_current_user_can_edit($quote_id) {
+  return
+    current_user_can('edit_post', get_the_ID()) ||
+    get_post_field('post_name') === 'new' ||
+    get_post_meta(get_the_ID(), 'user_id', true) == get_current_user_id();
+  
+}
+
 function vz_user_quote_template_override($template) {
   if (is_singular('vz-user-quotes')) {
     if (
         current_user_can('edit_post', get_the_ID()) ||
         get_post_field('post_name') === 'new' ||
-        get_post_meta(get_the_ID(), 'user_id', true) === get_current_user_id() ||
+        get_post_meta(get_the_ID(), 'user_id', true) == get_current_user_id() ||
         get_post_meta(get_the_ID(), 'vz-quote-privacy', true) === 'public' ||
         get_post_meta(get_the_ID(), 'vz-quote-privacy', true) === 'password'
       )
@@ -133,48 +141,20 @@ function vz_quote_lost_password_url() {
   }
 }
 
-function vz_get_react_component_resources() {
-  $css = 'main.css';
-  $js = 'main.js';
-
-  // $folder = plugin_dir_url(__FILE__) . 'vz-user-quote-single/build/static';
-
-  // // read the directory
-  // $css_files = scandir($folder . '/css');
-  // foreach ($css_files as $file) {
-  //   if (preg_match('/main\.[a-zA-Z0-9]*\.css/', $file)) {
-  //     $css = $file;
-  //   }
-  // }
-
-  // $js_files = scandir($folder . '/js');
-  // foreach ($js_files as $file) {
-  //   if (preg_match('/main\.[a-zA-Z0-9]*\.js/', $file)) {
-  //     $js = $file;
-  //   }
-  // }
-
-  return [
-    'css' => $css,
-    'js' => $js,
-  ];
-}
 
 function vz_user_quote_enqueue_scripts() {
   wp_enqueue_style('vz-user-quotes-archive-style', plugin_dir_url(__FILE__) . 'style.css', array(), '1.0.0', 'all');
 
-  
   if (is_singular('vz-user-quotes')) {
     $privacy_option = get_post_meta(get_the_ID(), 'vz-quote-privacy', true);
     $privacy_password = get_post_meta(get_the_ID(), 'vz-quote-privacy__password', true);
-    $files = vz_get_react_component_resources();
-    wp_enqueue_style('vz-user-quote-style', plugin_dir_url(__FILE__) . 'vz-user-quote-single/build/static/css/' . $files['css'], array(), '1.0.0', 'all');
-    wp_enqueue_script('vz-user-quote', plugin_dir_url(__FILE__) . 'vz-user-quote-single/build/static/js/' . $files['js'], array('wp-element'), '0.0.1', true);
+    wp_enqueue_style('vz-user-quote-style', plugin_dir_url(__FILE__) . 'vz-user-quote-single/build/static/css/main.css', array(), '1.0.0', 'all');
+    wp_enqueue_script('vz-user-quote', plugin_dir_url(__FILE__) . 'vz-user-quote-single/build/static/js/main.js' , array('wp-element'), '0.0.1', true);
 
     if (
       current_user_can('edit_post', get_the_ID()) ||
       get_post_field('post_name') === 'new' ||
-      get_post_meta(get_the_ID(), 'user_id', true) === get_current_user_id() ||
+      get_post_meta(get_the_ID(), 'user_id', true) == get_current_user_id() ||
       get_post_meta(get_the_ID(), 'vz-quote-privacy', true) === 'public' ||
       (
         get_post_meta(get_the_ID(), 'vz-quote-privacy', true) === 'password' &&
@@ -195,7 +175,9 @@ function vz_user_quote_enqueue_scripts() {
         'client_details' => get_post_meta(get_the_ID(), 'vz-quote-client', true),
         'products' => get_post_meta(get_the_ID(), 'vz-quote-products', true),
         'can_edit_vat' => current_user_can('edit_post', get_the_ID()),
-        'current_user_id' => get_current_user_id(),
+        'current_user_can_edit' => vz_current_user_can_edit(get_the_ID()),
+        'is_logged_in' => is_user_logged_in(),
+        'quote_was_sent' => get_post_meta(get_the_ID(), 'vz-quote-sent', true),
         'options' => array(
           'subtotal' => get_post_meta(get_the_ID(), 'vz-quote-subtotal', true),
           'vat' => get_post_meta(get_the_ID(), 'vz-quote-vat', true),
@@ -210,13 +192,16 @@ function vz_user_quote_enqueue_scripts() {
         $params['woocommerce'] = true;
         $params['woocommerce_cart_contents'] = vz_get_cart_contents();
       }
-    } else {
+    } else { // password protected - show password dial
       $params = [
         'locked' => true,
+        'login_api' => rest_url('wp/v2/users'),
+        'register_api' => rest_url('wp/v2/users/register'),
         'company_details' => get_option('vz-user-quotes-settings'),
         'company_logo' => get_option('vz-user-quotes-settings')['company_logo'],
       ];
     }
+    $params['website_language'] = explode('-',get_bloginfo('language'))[0];
     wp_localize_script('vz-user-quote', 'vz_user_quote', $params);
   }
 }
@@ -386,7 +371,7 @@ function vz_user_quote_save( WP_REST_Request $request ) {
     if (!empty($quote)) {
       if(!current_user_can('edit_post', $quote[0]->ID)) {
         $quote_user_id = get_post_meta($quote[0]->ID, 'user_id', true);
-        if ($quote_user_id !== get_current_user_id()) {
+        if ($quote_user_id != get_current_user_id()) {
           $response = [
             'status' => 'error',
             'message' => 'You do not have permission to edit this quote'
@@ -441,6 +426,10 @@ function vz_user_quote_save( WP_REST_Request $request ) {
     update_post_meta($quote_id, 'vz-quote-privacy__password', md5($options['password']));
   }
 
+  if ($data['send']) {
+    update_post_meta($quote_id, 'vz-quote-sent', true); 
+  }
+
   $status = 'success';
   $response = [
     'status' => $status,
@@ -456,9 +445,76 @@ function vz_user_quote_rest_api() {
     'methods' => 'POST',
     'callback' => 'vz_user_quote_save',
   ));
+  register_rest_route('vz-user-quotes/v1', '/login', array(
+    'methods' => 'POST',
+    'callback' => 'vz_user_quote_login',
+  ));
+  register_rest_route('vz-user-quotes/v1', '/register', array(
+    'methods' => 'POST',
+    'callback' => 'vz_user_quote_register',
+  ));
+}
+add_action('rest_api_init', 'vz_user_quote_rest_api');
+
+function vz_user_quote_login( WP_REST_Request $request ) {
+  $data = json_decode(file_get_contents('php://input'), true);
+  $login_data = [
+    "user_login" => $data['username'],
+    "user_password" => $data['password'],
+  ];
+  $user = wp_signon($login_data);
+  if (is_wp_error($user)) {
+    $response = [
+      'status' => 'error',
+      'message' => $user->get_error_message(),
+      'data' => $data,
+    ];
+  } else {
+    wp_set_current_user($user->ID);
+    wp_set_auth_cookie($user->ID);
+    
+    $response = [
+      'status' => 'success',
+      'wp_rest_nonce' => wp_create_nonce('wp_rest'),
+      'username' => $user->user_login,
+      'email' => $user->user_email,
+    ];
+  }
+  echo json_encode($response);
+  exit;
 }
 
-add_action('rest_api_init', 'vz_user_quote_rest_api');
+
+function vz_user_quote_register( WP_REST_Request $request ) {
+  $data = json_decode(file_get_contents('php://input'), true);
+  $user_id = username_exists($data['username']);
+  if (!$user_id && email_exists($data['email']) == false) {
+    $user_id = wp_create_user($data['username'], $data['password'], $data['email']);
+    if (!is_wp_error($user_id)) {
+      wp_set_current_user($user_id);
+      wp_set_auth_cookie($user_id);
+
+      $response = [
+        'status' => 'success',
+        'wp_rest_nonce' => wp_create_nonce('wp_rest'),
+        'username' => $data['username'],
+        'email' => $data['email'],
+      ];
+    } else {
+      $response = [
+        'status' => 'error',
+        'message' => $user_id->get_error_message(),
+      ];
+    }
+  } else {
+    $response = [
+      'status' => 'error',
+      'message' => 'User already exists',
+    ];
+  }
+  echo json_encode($response);
+  exit;
+}
 
 
 // add a section to woocommerce my account called 'My Quotes'
@@ -506,3 +562,32 @@ function vz_user_quote_my_account_title($title) {
   }
   return $title;
 }
+
+// add a column to the user quotes table at admin dashboard displaying if the quote has been sent
+function vz_user_quote_columns($columns) {
+  $columns['vz-quote-sent'] = __('Sent', 'vz-user-quotes');
+  return $columns;
+}
+
+add_filter('manage_vz-user-quotes_posts_columns', 'vz_user_quote_columns');
+
+function vz_user_quote_column_content($column, $post_id) {
+  if ($column === 'vz-quote-sent') {
+    $sent = get_post_meta($post_id, 'vz-quote-sent', true);
+    if ($sent) {
+      echo 'Yes';
+    } else {
+      echo 'No';
+    }
+  }
+}
+
+add_action('manage_vz-user-quotes_posts_custom_column', 'vz_user_quote_column_content', 10, 2);
+
+function vz_user_quote_sortable_columns($columns) {
+  $columns['vz-quote-sent'] = 'vz-quote-sent';
+  return $columns;
+}
+
+add_filter('manage_edit-vz-user-quotes_sortable_columns', 'vz_user_quote_sortable_columns');
+

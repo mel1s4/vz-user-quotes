@@ -4,14 +4,9 @@ import QuoteInput from 'components/quoteInput';
 import language_strings from 'language';
 
 function App() {
-  let vz_user_quote = {
-    quote_slug: 'new',
-    nonce: '',
-    rest_url: '',
-    createdAt: new Date().toLocaleDateString(),
-    author_name: 'VZ Solutions',
-    last_edit: new Date().toLocaleDateString(),
-  };
+  const [protectEdit, setProtectEdit] = useState(false);
+  const [userIsLoggedIn, setUserIsLoggedIn] = useState(false);
+  const [nonce, setNonce] = useState('');
   const [companyDetails, setCompanyDetails] = useState({
     company_name: 'VZ Solutions',
     company_address_line_1: 'Calle 1',
@@ -21,14 +16,19 @@ function App() {
     company_email: 'contact@viroz.studio',
     company_website: 'https://viroz.studio',
     company_registration_number: '1234567890',
-    //. company_logo: 'https://placekitten.com/400/200',
     company_logo: 'https://placehold.co/400x200',
     terms_and_conditions_text: '',
   });
   const [quote, setQuote] = useState({});
-  const language = 'es';
+  const [language, setLanguage] = useState('es');
   const quoteDate = new Date().toLocaleDateString();
   const [productList, setProductList] = useState([{}]);
+  const [responseMessage, setResponseMessage] = useState({
+    type: '',
+    message: '',
+    title: '',
+    ttl: 0,
+  });
   const [clientDetails, setClientDetails] = useState({
     company: '',
     name: '',
@@ -60,8 +60,33 @@ function App() {
     window.print();
   }
 
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  function openPasswordModal() {
+    setPasswordModalOpen(true);
+  }
 
   useEffect(() => {
+
+    if(window.vz_user_quote?.language) {
+      setLanguage(window.vz_user_quote.language);
+    }
+
+    if (window?.vz_user_quote?.is_logged_in) {
+      setUserIsLoggedIn(true);
+    }
+
+    if (window?.vz_user_quote?.locked) {
+      openPasswordModal();
+    }
+    if (!window?.vz_user_quote?.current_user_can_edit) {
+      console.log('User cannot edit');
+      setProtectEdit(true);
+    }
+    
+    if (window?.vz_user_quote?.nonce) {
+      setNonce(window.vz_user_quote.nonce);
+    }
+
     if (window?.vz_user_quote?.company_details) {
       setCompanyDetails(window.vz_user_quote.company_details);
     }
@@ -83,16 +108,51 @@ function App() {
     if (window?.vz_user_quote?.quote) {
       setQuote(window.vz_user_quote.quote);
     }
-    console.log(window.vz_user_quote);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('success')) {
+      activateResponseMessage('Success', 'Changes saved successfully', 'success');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    if (window?.vz_user_quote?.quote_was_sent == true) {
+      console.log('Quote was sent');
+      setProtectEdit(true);
+    }
+
+    const localStorageCopy = localStorage.getItem('quote');
+    if (localStorageCopy && window?.vz_user_quote.quote_slug == 'new') {
+      loadCopyFromLocalStorage();
+    }
+
   }, [window]);
 
+  const [closeResponseMessageAnimationTimeout, setCloseResponseMessageAnimationTimeout] = useState(null);
+  function activateResponseMessage(title, message, type = 'info', ttl = 5) {
+    setResponseMessage({ title, message, type, ttl });
+    setCloseResponseMessageAnimationTimeout(
+      setTimeout(() => {
+        closeResponseMessage();
+      }, ttl * 1000)
+    );
+  }
+
+  const [closeResponseMessageAnimation, setCloseResponseMessageAnimation] = useState(false);
+  function closeResponseMessage() {
+    setCloseResponseMessageAnimation(true);
+    setCloseResponseMessageAnimationTimeout(null);
+    setTimeout(() => {
+      setResponseMessage({});
+      setCloseResponseMessageAnimation(false);
+    }, 500);
+  }
+
   function _(string) {
-    if (!language_strings[string])
-      return string;
-    if (!language_strings[string][language])
-      return string;
-    else 
+    if (language_strings[string] && language_strings[string][language]) {
       return language_strings[string][language];
+    } else {
+      return string;
+    }
   }
 
   function addProduct() {
@@ -102,7 +162,7 @@ function App() {
       name: '',
       description: '',
       price: 0,
-      quantity: 0,
+      quantity: 1,
     };
     setProductList([...productList, productTemplate]);
   }
@@ -117,6 +177,7 @@ function App() {
   function copyFromWoocommerce() {
     if (!window?.vz_user_quote?.woocommerce_cart_contents) {
       console.error('No woocommerce cart contents found');
+      activateResponseMessage('Error', 'There was an error copying the products', 'error');
       return;
     }
     const woocommerceCartContents = window.vz_user_quote.woocommerce_cart_contents;
@@ -134,13 +195,18 @@ function App() {
     setProductList([...oldProductList, ...newProductList]);
   }
 
-  async function saveChanges() {
+  async function saveChanges( send = false ) {
+    if (protectEdit) {
+      activateResponseMessage('Error', 'This quote has already been sent', 'error');
+      return;
+    }
+
     const rest_url = window?.vz_user_quote?.rest_url;
-    const nonce = window?.vz_user_quote?.nonce;
     const quoteSlug = window?.vz_user_quote?.quote_slug;
 
     if (!rest_url || !nonce || !quoteSlug) {
-      console.error('No rest_url found');
+      console.error('No rest_url, nonce or quote_slug found', { rest_url, nonce, quoteSlug });
+      activateResponseMessage('Error', 'There was an error saving the quote', 'error');
       return;
     }
     const params = {
@@ -155,6 +221,9 @@ function App() {
       }
     }
 
+    if (send) {
+      params.send = true;
+    }
 
     try {
       const fetchUrl = `${rest_url}vz-user-quotes/v1/save-quote`;
@@ -170,23 +239,142 @@ function App() {
       const data = await response.text();
       const jsonData = JSON.parse(data);
       if(jsonData.status == 'success'  && quoteSlug == 'new') {
-        const newPostLocation = `${window.location.origin}/vz-user-quotes/${jsonData.quote_slug}`;
+        const newPostLocation = `${window.location.origin}/vz-user-quotes/${jsonData.quote_slug}?success`;
         window.location.href = newPostLocation;
+      } else if(jsonData.status == 'success') {
+        activateResponseMessage('Success', 'Changes saved successfully', 'success');
+      } else if(jsonData.status == 'error') {
+        activateResponseMessage('Error', jsonData.message, 'error');
       }
     } catch (error) {
+      activateResponseMessage('Error', error.message, 'error');
       console.error(error);
     }
   }
 
+  function isValidAuthorName(authorName) {
+    return authorName && authorName !== '';
+  }
+
+  function saveCopyAtLocalStorage()  {
+    const quote = {
+      companyDetails,
+      clientDetails,
+      productList,
+      quoteOptions,
+    };
+    localStorage.setItem('quote', JSON.stringify(quote));
+  }
+
+  function loadCopyFromLocalStorage() {
+    const quote = localStorage.getItem('quote');
+    if (quote) {
+        const quoteJson = JSON.parse(quote);
+        setCompanyDetails(quoteJson.companyDetails);
+        setClientDetails(quoteJson.clientDetails);
+        setProductList(quoteJson.productList);
+        setQuoteOptions(quoteJson.quoteOptions
+      );
+      deleteCopyFromLocalStorage();
+    }
+  }
+
+  function deleteCopyFromLocalStorage() {
+    localStorage.removeItem('quote');
+  }
+
   function sendQuote() {
-    saveChanges();
+    if(window.confirm('Are you sure you want to send this quote?')) {
+      saveChanges(true);
+    }
   }
 
-  function login() {
-
+  async function login() {
+    saveCopyAtLocalStorage();
+    const rest_url = window?.vz_user_quote?.rest_url;
+    const fetchUrl = `${rest_url}vz-user-quotes/v1/login`;
+    const params = {
+      username: username,
+      password: password,
+    }
+    try {
+      const result = await fetch(fetchUrl, {
+        method: 'POST',
+        body: JSON.stringify(params),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const resultText = await result.text();
+      const resultJson = JSON.parse(resultText);
+      console.log(resultJson);
+      if (resultJson.status === 'success') {
+        activateResponseMessage('Success', _('registration-success'), 'success');
+        setUserIsLoggedIn(true);
+        const nonce = resultJson.wp_rest_nonce;
+        setNonce(nonce);
+        setCookies(resultJson);
+        window.location.reload();
+      } else {
+        activateResponseMessage('Error', resultJson.message, 'error');
+      }
+    } catch(error) {
+      console.error(error);
+      activateResponseMessage('Error', 'There was an error logging in', 'error');
+    }
   }
 
-   function register() {
+  async function setCookies(resultJson) {
+    const cookieParams = {
+      'username': resultJson.username,
+      'email': resultJson.email,
+      'nonce': resultJson.wp_rest_nonce,
+    }
+    const cookieString = Object.keys(cookieParams).map((key) => {
+      return `${key}=${cookieParams[key]}`;
+    }).join(';');
+    document.cookie = cookieString;
+  }
+
+   async function register() {
+    saveCopyAtLocalStorage();
+    const rest_url = window?.vz_user_quote?.rest_url;
+    const fetchUrl = `${rest_url}vz-user-quotes/v1/register`;
+    if (password !== userPassword) {
+      console.error('Passwords do not match');
+      activateResponseMessage('Error', 'Passwords do not match', 'error');
+      return;
+    }
+    const params = {
+      username: username,
+      email: userEmail,
+      password: userPassword,
+    }
+    try {
+      const result = await fetch(fetchUrl, {
+        method: 'POST',
+        body: JSON.stringify(params),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const resultText = await result.text();
+      const resultJson = JSON.parse(resultText);
+      console.log(resultJson);
+      if (resultJson.status === 'success') {
+        setUserIsLoggedIn(true);
+        activateResponseMessage('Success', _('registration-success'), 'success');
+        const nonce = resultJson.wp_rest_nonce;
+        setNonce(nonce);
+        setCookies(resultJson);
+        window.location.reload();
+      } else {
+        activateResponseMessage('Error', resultJson.message, 'error');
+      }
+    } catch(error) {
+      console.error(error);
+      activateResponseMessage('Error', 'There was an error registering', 'error');
+    }
    }
 
 
@@ -260,61 +448,63 @@ function App() {
         </div>
       </header>
 
-      <section className="user-details">
-        {
-          loginOrRegister === 'login' &&
-          <div className="login">
-            <div className="vz-quote__products-header">
-              <h2>{_('login-header')}</h2>
-              <p className='toggle-login-register'>
-                  {_('register-instead')} <button className="link" onClick={() => toggleLoginRegister()}>{_('register-button')}</button>
-              </p>
+      { !userIsLoggedIn &&
+        <section className="user-details">
+          {
+            loginOrRegister === 'login' &&
+            <div className="login">
+              <div className="vz-quote__products-header">
+                <h2>{_('login-header')}</h2>
+                <p className='toggle-login-register'>
+                    {_('register-instead')} <button className="link" onClick={() => toggleLoginRegister()}>{_('register-button')}</button>
+                </p>
+              </div>
+              <div className="inline-fields">
+                <QuoteInput type="text" 
+                            title={_('username')} 
+                            onChange={(e) => setUsername(e)} />
+                <QuoteInput type="password" 
+                            title={_('password')} 
+                            onChange={(e) => setPassword(e)} />
+                <button className="button btn-" onClick={() => login()}>
+                  {_('login-button')}
+                </button>
+              </div>
+              
             </div>
-            <div className="inline-fields">
-              <QuoteInput type="text" 
-                          title={_('username')} 
-                          onChange={(e) => setUsername(e)} />
-              <QuoteInput type="password" 
-                          title={_('password')} 
-                          onChange={(e) => setPassword(e)} />
-              <button className="button btn-" onClick={() => login()}>
-                {_('login-button')}
-              </button>
-            </div>
-            
-          </div>
-        }
-        {
-          loginOrRegister === 'register' &&
-          <div className="register">
+          }
+          {
+            loginOrRegister === 'register' &&
+            <div className="register">
 
-            <div className="vz-quote__products-header">
-              <h2>{_('register-header')}</h2>
-              <p className='toggle-login-register'>
-                {_('login-instead')} <button className="link" onClick={() => toggleLoginRegister()}>{_('login-button')}</button>
-              </p>
+              <div className="vz-quote__products-header">
+                <h2>{_('register-header')}</h2>
+                <p className='toggle-login-register'>
+                  {_('login-instead')} <button className="link" onClick={() => toggleLoginRegister()}>{_('login-button')}</button>
+                </p>
+              </div>
+              <div className="inline-fields">
+                <QuoteInput type="text" 
+                            title={_('username')} 
+                            onChange={(e) => setUsername(e)} />
+                <QuoteInput type="text" 
+                            title={_('email')} 
+                            onChange={(e) => setUserEmail(e)} />
+                <QuoteInput type="password" 
+                            title={_('password')} 
+                            onChange={(e) => setPassword(e)} />
+                <QuoteInput type="password" 
+                            title={_('repeat-password')} 
+                            onChange={(e) => setUserPassword(e)} />
+                <button className="button btn-" onClick={() => register()}>
+                  {_('register-button')}
+                </button>
+              </div>
+            
             </div>
-            <div className="inline-fields">
-              <QuoteInput type="text" 
-                          title={_('username')} 
-                          onChange={(e) => setUsername(e)} />
-              <QuoteInput type="text" 
-                          title={_('email')} 
-                          onChange={(e) => setUserEmail(e)} />
-              <QuoteInput type="password" 
-                          title={_('password')} 
-                          onChange={(e) => setPassword(e)} />
-              <QuoteInput type="password" 
-                          title={_('repeat-password')} 
-                          onChange={(e) => setUserPassword(e)} />
-              <button className="button btn-" onClick={() => register()}>
-                {_('register-button')}
-              </button>
-            </div>
-           
-          </div>
-        }
-      </section>
+          }
+        </section>
+      }
 
       <section className="client-details">
         <h2>{_('client-details')}</h2>
@@ -459,28 +649,70 @@ function App() {
           </button>
 
         </section>
-        <section className="vz-quote__author">
-            <h2>
-              {_('last-edit-by')}
-            </h2>
-            <article className="author-card">
-              <div className="author-icon">
-                <div className="clipping-mask">
-                  <span className="head-circle"></span>
-                  <span className="body-circle"></span>
+        { isValidAuthorName(window?.vz_user_quote?.author_name) &&
+        
+          <section className="vz-quote__author">
+              <h2>
+                {_('last-edit-by')}
+              </h2>
+              <article className="author-card">
+                <div className="author-icon">
+                  <div className="clipping-mask">
+                    <span className="head-circle"></span>
+                    <span className="body-circle"></span>
+                  </div>
                 </div>
-              </div>
-              <div className="author-details">
-                <p className="author-name">
-                  {window?.vz_user_quote?.author_name}
-                </p>
-                <p>
-                  {window?.vz_user_quote?.createdAt}
-                </p>
-              </div>
-            </article>
-          </section>
+                <div className="author-details">
+                  <p className="author-name">
+                    {window?.vz_user_quote?.author_name}
+                  </p>
+                  <p>
+                    {window?.vz_user_quote?.createdAt}
+                  </p>
+                </div>
+              </article>
+            </section>
+          }
       </div>
+
+      { responseMessage.title &&
+        <article className={
+          `response-message --${responseMessage.type} ${closeResponseMessageAnimation ? '--closing' : ''}`
+        }>
+          <h3>
+            {responseMessage.title}
+          </h3>
+          <p>
+            {responseMessage.message}
+          </p>
+          <button class="btn-close" 
+                  onClick={() => closeResponseMessage()}>
+            ✕
+          </button>
+        </article>
+      }
+
+      { passwordModalOpen &&
+        <article className="password-modal">
+          <form method="post">
+            <h2>
+              {_('password-protected')}
+            </h2>
+            <p>
+              {_('password-protected-message')}
+            </p>
+            <QuoteInput type="password" 
+                        title={_('password')} 
+                        onChange={(e) => setQuoteOptions({ ...quoteOptions, password: e })} />
+            <input type="hidden"
+                    value = {quoteOptions.password}
+                    name="vz-quote-password" />
+            <button className="button btn-" onClick={() => saveChanges()}>
+              {_('unlock')}
+            </button>
+          </form>
+        </article>
+      }
     </main>
   );
 }

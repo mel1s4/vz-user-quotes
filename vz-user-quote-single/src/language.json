@@ -179,5 +179,13 @@
   "print": {
     "en": "Print",
     "es": "Imprimir"
+  },
+  "registration-success": {
+    "en": "Registration Successful. You may now save your changes.",
+    "es": "Registro Exitoso. Ahora puedes guardar tus cambios."
+  },
+  "login-success": {
+    "en": "Log In Successful. You may now save your changes.",
+    "es": "Inicio de sesion exitoso. Ahora puedes guardar tus cambios."
   }
 }

@@ -1,0 +1,316 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Viroz User Quotes\n"
+"POT-Creation-Date: 2024-08-28 12:28-0600\n"
+"PO-Revision-Date: 2024-08-28 12:28-0600\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"X-Generator: Poedit 3.4.4\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-Flags-xgettext: --add-comments=translators:\n"
+"X-Poedit-WPHeader: functions.php\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
+"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;"
+"_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: *.min.js\n"
+"X-Poedit-SearchPathExcluded-1: vz-user-quote-single/node_modules\n"
+
+#: functions.php:28
+msgctxt "Quotes"
+msgid "User Quotes"
+msgstr ""
+
+#: functions.php:29
+msgctxt "Quote"
+msgid "User Quote"
+msgstr ""
+
+#: functions.php:30 functions.php:58
+msgid "User Quotes"
+msgstr ""
+
+#: functions.php:31 functions.php:57
+msgid "User Quote"
+msgstr ""
+
+#: functions.php:32
+msgid "User Quote Archives"
+msgstr ""
+
+#: functions.php:33
+msgid "User Quote Attributes"
+msgstr ""
+
+#: functions.php:34
+msgid "Parent User Quote:"
+msgstr ""
+
+#: functions.php:35
+msgid "All User Quotes"
+msgstr ""
+
+#: functions.php:36
+msgid "Add New User Quote"
+msgstr ""
+
+#: functions.php:37
+msgid "Add New"
+msgstr ""
+
+#: functions.php:38
+msgid "New User Quote"
+msgstr ""
+
+#: functions.php:39
+msgid "Edit User Quote"
+msgstr ""
+
+#: functions.php:40
+msgid "Update User Quote"
+msgstr ""
+
+#: functions.php:41
+msgid "View User Quote"
+msgstr ""
+
+#: functions.php:42
+msgid "View User Quotes"
+msgstr ""
+
+#: functions.php:43
+msgid "Search User Quote"
+msgstr ""
+
+#: functions.php:44
+msgid "Not found"
+msgstr ""
+
+#: functions.php:45
+msgid "Not found in Trash"
+msgstr ""
+
+#: functions.php:46
+msgid "Featured Image"
+msgstr ""
+
+#: functions.php:47
+msgid "Set featured image"
+msgstr ""
+
+#: functions.php:48
+msgid "Remove featured image"
+msgstr ""
+
+#: functions.php:49
+msgid "Use as featured image"
+msgstr ""
+
+#: functions.php:50
+msgid "Insert into User Quote"
+msgstr ""
+
+#: functions.php:51
+msgid "Uploaded to this User Quote"
+msgstr ""
+
+#: functions.php:52
+msgid "User Quotes list"
+msgstr ""
+
+#: functions.php:53
+msgid "User Quotes list navigation"
+msgstr ""
+
+#: functions.php:54
+msgid "Filter User Quotes list"
+msgstr ""
+
+#: functions.php:230
+msgid "User ID"
+msgstr ""
+
+#: functions.php:244
+msgid "Select a user"
+msgstr ""
+
+#: functions.php:568
+msgid "Sent"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:279 vz-user-quote-single/src/App.js:331
+msgid "registration-success"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:392
+msgid "company-registration-number"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:400
+msgid "print"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:403
+msgid "save-changes"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:408
+msgid "terms-and-conditions"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:421
+msgid "login-header"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:423
+msgid "register-instead"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:423 vz-user-quote-single/src/App.js:464
+msgid "register-button"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:428 vz-user-quote-single/src/App.js:452
+msgid "username"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:431 vz-user-quote-single/src/App.js:458
+#: vz-user-quote-single/src/App.js:583
+msgid "password"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:434 vz-user-quote-single/src/App.js:447
+msgid "login-button"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:445
+msgid "register-header"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:447
+msgid "login-instead"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:455
+msgid "email"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:461
+msgid "repeat-password"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:474
+msgid "client-details"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:488
+msgid "products"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:491
+msgid "add-from-woocommerce"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:496
+msgid "add-product"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:503
+msgid "add-product-to-start"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:515
+msgid "sku"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:519
+msgid "name"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:523
+msgid "description"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:528
+msgid "price"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:532
+msgid "quantity"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:539
+msgid "remove"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:551
+msgid "options"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:554 vz-user-quote-single/src/App.js:602
+msgid "vat"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:560
+msgid "notes"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:565
+msgid "quote-privacy-header"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:572
+msgid "anyone-with-link"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:579
+msgid "password-protected"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:591
+msgid "private"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:597
+msgid "subtotal"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:607
+msgid "total"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:612
+msgid "send-quote"
+msgstr ""
+
+#: vz-user-quote-single/src/App.js:620
+msgid "last-edit-by"
+msgstr ""
+
+#. Plugin Name of the plugin/theme
+msgid "Viroz User Quotes"
+msgstr ""
+
+#. Plugin URI of the plugin/theme
+msgid "https://viroz.studio/portfolio/user-quotes/"
+msgstr ""
+
+#. Description of the plugin/theme
+msgid ""
+"Creates a new post type for a community directory. Registered users may "
+"submit a new community listing and rate existing listings."
+msgstr ""
+
+#. Author of the plugin/theme
+msgid "Melisa Viroz"
+msgstr ""
+
+#. Author URI of the plugin/theme
+msgid "https://melisaviroz.com"
+msgstr ""

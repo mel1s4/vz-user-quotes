@@ -1,0 +1,133 @@
+.vz-quotes__quotes-list {
+  list-style: none;
+  padding: 0;
+}
+
+.vz-quote__slug a {
+  text-transform: uppercase;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.vz-quote__card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0;
+  border-bottom: 1px solid #ccc;
+}
+
+.vz-quote__card-details {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.vz-quote__slug {
+  margin: 0;
+  padding: 0;
+}
+.vz-quote__note {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  font-style: italic;
+  color: #666;
+}
+.vz-quote__date {
+  margin: 0;
+  padding: 0;
+  margin-left: 1em; 
+}
+
+.vz-quotes__pagination {
+  display: flex;
+  justify-content: space-between;
+
+}
+
+.vz-quotes__create-button {
+  background-color: blue;
+  color: white;
+  padding: 0.3em 1em;
+  text-decoration: none;
+  border-radius: 0.25em;
+  display: inline-block;
+  font-size: 1rem;
+  line-height: 1;
+  margin-right: auto;
+}
+
+.vz-quotes__pagination-button {
+  font-size: 1rem;
+  line-height: 1;
+  border: 1px solid blue;
+  padding: 0.3em 1em;
+  border-radius: 0.35em;
+  display: inline-block;
+  background-color: transparent;
+  margin: 0 0.5em;
+}
+
+
+.vz-quotes__search-container {
+  display: flex;
+  align-items: center;
+  border-radius: 4em;
+  border: 1px solid #ccc;
+  flex-grow: 1;
+  margin-left: 1em;
+}
+
+.vz-quotes__search-container input {
+  padding: 0.3em 1em;
+  border: none;
+  outline: none !important;
+  border-radius: 4em;
+  margin-right: 0.5em;
+  flex-grow: 1;
+}
+
+.vz-quotes__search-container button {
+  background-image: url('img/search-icon.svg');
+  padding: 0.3em 1em;
+  height: 2em;
+  border: none;
+  background-color: blue;
+  border-radius: 4em;
+  text-indent: -9999px;
+  background-size: 1.5em;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.vz-quote__delete-button,
+  .vz-quote__duplicate-button,
+  .vz-quote__edit-button {
+    width: 3em;
+    height: 3em;
+    border: none;
+    border-radius: 4em;
+    text-indent: -9999px;
+    background-size: 1.5em;
+    background-repeat: no-repeat;
+    background-position: center;
+    display: inline-block;
+    background-color: #ccc;
+    font-size: 0.7rem;
+    vertical-align: middle;
+    cursor: pointer;
+  }
+  
+  
+.vz-quote__delete-button {
+  background-image: url('img/delete-icon.svg');
+  background-color: red;
+}
+
+.vz-quote__duplicate-button {
+  background-image: url('img/duplicate-icon.svg');
+}
+
+.vz-quote__edit-button {
+  background-image: url('img/edit-icon.svg');
+}

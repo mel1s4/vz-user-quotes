@@ -1,0 +1,179 @@
+{
+  "quote": {
+    "en": "Quote",
+    "es": "Presupuesto"
+  },
+  "author": {
+    "en": "Author",
+    "es": "Autor"
+  },
+  "loading": {
+    "en": "Loading...",
+    "es": "Cargando..."
+  },
+
+  "add-product": {
+    "en": "Add Product",
+    "es": "Añadir Producto"
+  },
+  "save-changes": {
+    "en": "Save Changes",
+    "es": "Guardar Cambios"
+  },
+  "company": {
+    "en": "Company",
+    "es": "Empresa"
+  },
+  "phone": {
+    "en": "Phone",
+    "es": "Teléfono"
+  },
+  "email": {
+    "en": "Email",
+    "es": "Correo Electrónico"
+  },
+  "address": {
+    "en": "Address",
+    "es": "Dirección"
+  },
+  "name": {
+    "en": "Name",
+    "es": "Nombre"
+  },
+  "description": {
+    "en": "Description",
+    "es": "Descripción"
+  },
+  "price": {
+    "en": "Price",
+    "es": "Precio"
+  },
+  "quantity": {
+    "en": "Quantity",
+    "es": "Cantidad"
+  },
+  "remove": {
+    "en": "Remove",
+    "es": "Eliminar"
+  },
+  "total": {
+    "en": "Total",
+    "es": "Total"
+  },
+  "subtotal": {
+    "en": "Subtotal",
+    "es": "Subtotal"
+  },
+  "vat": {
+    "en": "VAT",
+    "es": "IVA"
+  },
+  "fiscalCode": {
+    "en": "Fiscal Code",
+    "es": "RFC"
+  },
+  "client-details": {
+    "en": "Client Details",
+    "es": "Detalles del Cliente"
+  },
+  "anyone-with-link": {
+    "en": "Anyone with the link",
+    "es": "Cualquiera con el enlace"
+  },
+  "options": {
+    "en": "Options",
+    "es": "Opciones"
+  },
+  "private": {
+    "en": "Only I can see it",
+    "es": "Solo yo puedo verlo"
+  },
+  "password-protected": {
+    "en": "Password Protected",
+    "es": "Protegido con Contraseña"
+  },
+  "sku": {
+    "en": "SKU",
+    "es": "SKU"
+  },
+  "send-quote": {
+    "en": "Send",
+    "es": "Enviar"
+  },
+  "register-instead": {
+    "en": "Don't have an account?",
+    "es": "¿No tienes una cuenta?"
+  },
+  "register-button": {
+    "en": "Register",
+    "es": "Registrarse"
+  },
+  "login-instead": {
+    "en": "Already have an account?",
+    "es": "¿Ya tienes una cuenta?"
+  },
+  "login-button": {
+    "en": "Login",
+    "es": "Iniciar Sesión"
+  },
+  "username": {
+    "en": "Username",
+    "es": "Nombre de Usuario"
+  },
+  "password": {
+    "en": "Password",
+    "es": "Contraseña"
+  },
+  "repeat-password": {
+    "en": "Repeat Password",
+    "es": "Repetir Contraseña"
+  },
+  "login-register": {
+    "en": "Login or Register",
+    "es": "Iniciar Sesión o Registrarse"
+  },
+  "products": {
+    "en": "Products",
+    "es": "Productos"
+  },
+  "login-header": {
+    "en": "Login",
+    "es": "Iniciar Sesión"
+  },
+  "register-header": {
+    "en": "Register",
+    "es": "Registrarse"
+  },
+  "last-edit": {
+    "en": "Last Edit",
+    "es": "Última Edición"
+  },
+  "company-registration-number": {
+    "en": "Company Registration Number",
+    "es": "RFC: "
+  },
+  "terms-and-conditions": {
+    "en": "I accept the Terms and Conditions",
+    "es": "Acepto los Términos y Condiciones"
+  },
+  "quote-privacy-header": {
+    "en": "Who can see this quote?",
+    "es": "¿Quiénes pueden ver este presupuesto?"
+  },
+  "last-edit-by": {
+    "en": "Last Edit by",
+    "es": "Última Edición por"
+  },
+  "notes": {
+    "en": "Notes",
+    "es": "Notas"
+  },
+  "add-product-to-start": {
+    "en": "Add a product to start",
+    "es": "Añade un producto para empezar"
+  },
+  "add-from-woocommerce": {
+    "en": "Copy cart",
+    "es": "Copiar carrito"
+  }
+}

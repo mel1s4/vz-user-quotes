@@ -4,6 +4,7 @@ import QuoteInput from 'components/quoteInput';
 import language_strings from 'language';
 
 function App() {
+  const [quoteSlug, setQuoteSlug] = useState('new');
   const [protectEdit, setProtectEdit] = useState(false);
   const [userIsLoggedIn, setUserIsLoggedIn] = useState(false);
   const [nonce, setNonce] = useState('');
@@ -67,6 +68,10 @@ function App() {
 
   useEffect(() => {
 
+    if (window?.vz_user_quote?.quote_slug) {
+      setQuoteSlug(window.vz_user_quote.quote_slug);
+    }
+
     if(window.vz_user_quote?.language) {
       setLanguage(window.vz_user_quote.language);
     }
@@ -111,17 +116,17 @@ function App() {
 
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('success')) {
-      activateResponseMessage('Success', 'Changes saved successfully', 'success');
+      activateResponseMessage(_('success'), _('saved-changes-success'), 'success');
       window.history.replaceState({}, document.title, window.location.pathname);
     }
 
-    if (window?.vz_user_quote?.quote_was_sent == true) {
+    if (window?.vz_user_quote?.quote_was_sent === true) {
       console.log('Quote was sent');
       setProtectEdit(true);
     }
 
     const localStorageCopy = localStorage.getItem('quote');
-    if (localStorageCopy && window?.vz_user_quote.quote_slug == 'new') {
+    if (localStorageCopy && window?.vz_user_quote.quote_slug === 'new') {
       loadCopyFromLocalStorage();
     }
 
@@ -147,6 +152,19 @@ function App() {
     }, 500);
   }
 
+  function copyShareLink() {
+    const shareLink = document.querySelector('.vz-quote__share-link > input');
+    shareLink.select();
+    document.execCommand('copy');
+    activateResponseMessage(_('success'), _('link-copied'), 'success');
+  }
+
+  function getQuoteLink() {
+    const url = window.location.href;
+    // remove any query parameters
+    const urlParts = url.split('?');
+    return urlParts[0];
+  }
   function _(string) {
     if (language_strings[string] && language_strings[string][language]) {
       return language_strings[string][language];
@@ -156,6 +174,10 @@ function App() {
   }
 
   function addProduct() {
+    addProductAtIndex(-1);
+  }
+
+  function addProductAtIndex(idx) {
     const productTemplate = {
       id: null,
       sku: '',
@@ -164,7 +186,19 @@ function App() {
       price: 0,
       quantity: 1,
     };
-    setProductList([...productList, productTemplate]);
+    const newProductList = [...productList];
+    newProductList.splice(idx + 1, 0, productTemplate);
+    setProductList(newProductList);
+    // set the focus on the new products name input
+    setTimeout(() => {
+      console.log('Setting focus on new product input');
+      // .input-group.input__product-name > input
+    const productList = document.querySelectorAll('.product-list__item');
+    const newProduct = productList[idx + 1];
+    const input = newProduct.querySelector('.input__product-name > input');
+    input.focus();
+    }, 100);
+    
   }
 
   function removeProduct(idx) {
@@ -177,7 +211,7 @@ function App() {
   function copyFromWoocommerce() {
     if (!window?.vz_user_quote?.woocommerce_cart_contents) {
       console.error('No woocommerce cart contents found');
-      activateResponseMessage('Error', 'There was an error copying the products', 'error');
+      activateResponseMessage(_('Error'), _('error-copying-products'), 'error');
       return;
     }
     const woocommerceCartContents = window.vz_user_quote.woocommerce_cart_contents;
@@ -197,7 +231,7 @@ function App() {
 
   async function saveChanges( send = false ) {
     if (protectEdit) {
-      activateResponseMessage('Error', 'This quote has already been sent', 'error');
+      activateResponseMessage(_('error'), _('error-quote-already-sent'), 'error');
       return;
     }
 
@@ -206,7 +240,7 @@ function App() {
 
     if (!rest_url || !nonce || !quoteSlug) {
       console.error('No rest_url, nonce or quote_slug found', { rest_url, nonce, quoteSlug });
-      activateResponseMessage('Error', 'There was an error saving the quote', 'error');
+      activateResponseMessage(_('error'), _('error-saving-quote'), 'error');
       return;
     }
     const params = {
@@ -238,16 +272,17 @@ function App() {
       });
       const data = await response.text();
       const jsonData = JSON.parse(data);
-      if(jsonData.status == 'success'  && quoteSlug == 'new') {
+      if(jsonData.status === 'success'  && quoteSlug === 'new') {
         const newPostLocation = `${window.location.origin}/vz-user-quotes/${jsonData.quote_slug}?success`;
         window.location.href = newPostLocation;
-      } else if(jsonData.status == 'success') {
-        activateResponseMessage('Success', 'Changes saved successfully', 'success');
-      } else if(jsonData.status == 'error') {
-        activateResponseMessage('Error', jsonData.message, 'error');
+      } else if(jsonData.status === 'success') {
+        activateResponseMessage(_('success'), _('success-changes-saved'), 'success');
+      } else if(jsonData.status === 'error') {
+        console.log(jsonData);
+        activateResponseMessage(_('error'), _('error-saving-changes'), 'error');
       }
     } catch (error) {
-      activateResponseMessage('Error', error.message, 'error');
+      activateResponseMessage('Error', _('error-saving-changes'), 'error');
       console.error(error);
     }
   }
@@ -284,7 +319,7 @@ function App() {
   }
 
   function sendQuote() {
-    if(window.confirm('Are you sure you want to send this quote?')) {
+    if(window.confirm(_('send-quote-confirm'))) {
       saveChanges(true);
     }
   }
@@ -309,18 +344,18 @@ function App() {
       const resultJson = JSON.parse(resultText);
       console.log(resultJson);
       if (resultJson.status === 'success') {
-        activateResponseMessage('Success', _('registration-success'), 'success');
+        activateResponseMessage(_('success'), _('registration-success'), 'success');
         setUserIsLoggedIn(true);
         const nonce = resultJson.wp_rest_nonce;
         setNonce(nonce);
         setCookies(resultJson);
         window.location.reload();
       } else {
-        activateResponseMessage('Error', resultJson.message, 'error');
+        activateResponseMessage(_('error'), resultJson.message, 'error');
       }
     } catch(error) {
       console.error(error);
-      activateResponseMessage('Error', 'There was an error logging in', 'error');
+      activateResponseMessage(_('error'), _('error-logging-in'), 'error');
     }
   }
 
@@ -342,7 +377,7 @@ function App() {
     const fetchUrl = `${rest_url}vz-user-quotes/v1/register`;
     if (password !== userPassword) {
       console.error('Passwords do not match');
-      activateResponseMessage('Error', 'Passwords do not match', 'error');
+      activateResponseMessage(_('error'), _('password-dont-match'), 'error');
       return;
     }
     const params = {
@@ -363,17 +398,17 @@ function App() {
       console.log(resultJson);
       if (resultJson.status === 'success') {
         setUserIsLoggedIn(true);
-        activateResponseMessage('Success', _('registration-success'), 'success');
+        activateResponseMessage(_('success'), _('registration-success'), 'success');
         const nonce = resultJson.wp_rest_nonce;
         setNonce(nonce);
         setCookies(resultJson);
         window.location.reload();
       } else {
-        activateResponseMessage('Error', resultJson.message, 'error');
+        activateResponseMessage(_('error'), resultJson.message, 'error');
       }
     } catch(error) {
       console.error(error);
-      activateResponseMessage('Error', 'There was an error registering', 'error');
+      activateResponseMessage(_('error'), _('error-registrating'), 'error');
     }
    }
 
@@ -405,11 +440,52 @@ function App() {
     ).format(v);
   }
 
+  const pageNavigationOptions = [
+    {
+      title: _('contact-information'),
+      component: 'ContactInformation',
+    },
+    {
+      title: _('products'),
+      component: 'Products',
+    },
+    {
+      title: _('options'),
+      component: 'Options',
+    },
+  ];
+
+  function nextStepInPage() {
+    const currentIndex = pageNavigationOptions.findIndex((option) => option.component === activePage);
+    const nextIndex = currentIndex + 1;
+    if (nextIndex < pageNavigationOptions.length) {
+      setActivePageComponent(pageNavigationOptions[nextIndex].component);
+    } else {
+      saveChanges();
+    }
+  }
+
+  const [activePage, setActivePage] = useState('ContactInformation');
+
+  function setActivePageComponent(component) {
+    setActivePage(component);
+  }
+
+  const [easyMode, setEasyMode] = useState(true);
+
+
+  function goBack() {
+    window.history.back();
+  }
+
   return (
     <main className="vz-quote">
       <header className="vz-quote__header">
         <section className="vz-quote__company-logo">
-          <img src={companyDetails.company_logo} alt={companyDetails.company_name} />
+          <button className="vz-quote__back-button" onClick={() => goBack()}>
+            <img src={companyDetails.company_logo}
+                alt={companyDetails.company_name} />
+          </button>
         </section>
         <section className="vz-quote__company-details">
           <h2 className="company-name">
@@ -432,9 +508,6 @@ function App() {
           </div>
         </section>
         <div className="vz-quote__actions">
-          <button className="button btn-secondary" onClick={() => print()}>
-            {_('print')}
-          </button>
           <button className="button btn-secondary" onClick={() => saveChanges()}>
             {_('save-changes')}
           </button>
@@ -447,14 +520,20 @@ function App() {
           </label>
         </div>
       </header>
-
+      <div className="user-details__wrapper">
       { !userIsLoggedIn &&
         <section className="user-details">
+          <div className="user-details__header">
+            <h2>{_('login-register-title')}</h2>
+            <p>
+              {_('login-register-message')}
+            </p>
+          </div>
           {
             loginOrRegister === 'login' &&
             <div className="login">
               <div className="vz-quote__products-header">
-                <h2>{_('login-header')}</h2>
+                <h3>{_('login-header')}</h3>
                 <p className='toggle-login-register'>
                     {_('register-instead')} <button className="link" onClick={() => toggleLoginRegister()}>{_('register-button')}</button>
                 </p>
@@ -478,7 +557,7 @@ function App() {
             <div className="register">
 
               <div className="vz-quote__products-header">
-                <h2>{_('register-header')}</h2>
+                <h3>{_('register-header')}</h3>
                 <p className='toggle-login-register'>
                   {_('login-instead')} <button className="link" onClick={() => toggleLoginRegister()}>{_('login-button')}</button>
                 </p>
@@ -505,175 +584,211 @@ function App() {
           }
         </section>
       }
+      </div>
 
-      <section className="client-details">
-        <h2>{_('client-details')}</h2>
-        {
-          Object.keys(clientDetails).map((key, index) => (
-            <QuoteInput key={index} 
-                        type="text" 
-                        title={_(key)} 
-                        value={clientDetails[key]}
-                        onChange={(e) => setClientDetails({ ...clientDetails, [key]: e })} />
-          ))
-        }
-      </section>
-      
-      <section className="vz-quote__products">
-        <div className="vz-quote__products-header">
-          <h2>{_('products')}</h2>
-          { window?.vz_user_quote?.woocommerce &&
-            <button className="button btn-secondary" onClick={() => copyFromWoocommerce()}>
-              {_('add-from-woocommerce')}
-            </button>
-          }
-          
-          <button className="button btn-secondary" onClick={() => addProduct()}>
-            + {_('add-product')}
-          </button>
-        </div>
-        <ol className="product-list">
-          {
-            productList.length === 0 &&
-            <li className="product-list__item">
-              <p>{_('add-product-to-start')}</p>
-            </li>
-          }
-          {
-            productList.map((product, index) => (
-              <li key={index} className="product-list__item">
-                <article className="product-card">
-                  <span className="product-list__number">
-                    {index + 1}
-                  </span>
-                  <div className="product-details">
-                    <QuoteInput type="text" 
-                                title={_('sku')} 
-                                value={product.sku}
-                                onChange={(e) => updateProduct(index, 'sku', e)} />
-                    <QuoteInput type="text" 
-                                title={_('name')} 
-                                value={product.name}
-                                onChange={(e) => updateProduct(index, 'name', e)} />
-                    <QuoteInput type="text"
-                                title={_('description')}
-                                className="product-description"
-                                value={product.description}
-                                onChange={(e) => updateProduct(index, 'description', e)} />
-                    <QuoteInput type="number"
-                                title={_('price')}
-                                value={product.price}
-                                onChange={(e) => updateProduct(index, 'price', e)} /> 
-                    <QuoteInput type="number"
-                                title={_('quantity')}
-                                value={product.quantity}
-                                onChange={(e) => updateProduct(index, 'quantity', e)} />  
-                  </div>
-                  <p className="product-subtotal"> { formatMoney(product.price * product.quantity) } </p>
-                  <div className="product-actions">
-                    <button className="button-remove" onClick={removeProduct(index)}>
-                      {_('remove')}
-                    </button>
-                  </div>
-                </article>
+      <nav className="vz-quote__section-navigation">
+        <ul>
+          { pageNavigationOptions.map((option, index) => (
+              <li key={index}>
+                <button className={activePage === option.component ? '--active' : ''}
+                        onClick={() => setActivePageComponent(option.component)}>
+                  {option.title}
+                </button>
               </li>
+            )) }
+        </ul>
+      </nav>
+      { activePage === 'ContactInformation' &&
+        <section className="client-details">
+          <h2>{_('client-details')}</h2>
+          {
+            Object.keys(clientDetails).map((key, index) => (
+              <QuoteInput key={index} 
+                          type="text" 
+                          title={_(key)} 
+                          value={clientDetails[key]}
+                          onChange={(e) => setClientDetails({ ...clientDetails, [key]: e })} />
             ))
           }
-        </ol>
-      </section>
-
-      <div className="split-container">        
-      <section className="vz-quote__options">
-        <h2>{_('options')}</h2>
-        {window?.vz_user_quote?.can_edit_vat &&
-        <QuoteInput type="number"
-                    title={_('vat')}
-                    value={quoteOptions.vat * 100}
-                    onChange={(e) => setQuoteOptions({ ...quoteOptions, vat: e / 100 })} />
-                    
-        }
-        <QuoteInput type="textarea"
-                    title={_('notes')}
-                    value={quoteOptions.notes}
-                    onChange={(e) => setQuoteOptions({ ...quoteOptions, notes: e })} />
-        <div className="privacy-options">
-          <h4>
-            {_('quote-privacy-header')}
-          </h4>
-          <label>
-            <input type="radio" 
-                  checked={quoteOptions.privacy == 'public'} 
-                  value="public"
-                  onChange={(e) => setQuoteOptions({ ...quoteOptions, privacy: 'public' })} />
-            {_('anyone-with-link')}
-          </label>
-          <label>
-            <input type="radio" 
-                  checked={quoteOptions.privacy === 'password'} 
-                  value="password"
-                  onChange={(e) => setQuoteOptions({ ...quoteOptions, privacy: 'password' })} />
-            {_('password-protected')}
-          </label>
-          {quoteOptions.privacy === 'password' &&
-          <QuoteInput type="password" 
-                      title={_('password')} 
-                      onChange={(e) => setQuoteOptions({ ...quoteOptions, password: e })} />
-          }
-          <label>
-            <input type="radio" 
-                  checked={quoteOptions.privacy == 'private'} 
-                  value="private"
-                  onChange={(e) => setQuoteOptions({ ...quoteOptions, privacy: "private" })} />
-            {_('private')}
-          </label>
-        </div>
-      </section>
-        <section className="vz-quote__totals">
-          <div className="vz-quote__subtotal">
-            <h3>{_('subtotal')}</h3>
-            <p>{formatMoney(getSubtotal())}</p>
-          </div>
-
-          <div className="vz-quote__vat">
-            <h3>{_('vat')}</h3>
-            <p>{quoteOptions.vat * 100}%</p>
-          </div>
-
-          <div className="vz-quote__total">
-            <h2>{_('total')}</h2>
-            <p>{formatMoney(getTotal())}</p>
-          </div>
-
-          <button className="button btn-full" onClick={() => sendQuote()}>
-            {_('send-quote')}
-          </button>
-
         </section>
-        { isValidAuthorName(window?.vz_user_quote?.author_name) &&
-        
-          <section className="vz-quote__author">
-              <h2>
-                {_('last-edit-by')}
-              </h2>
-              <article className="author-card">
-                <div className="author-icon">
-                  <div className="clipping-mask">
-                    <span className="head-circle"></span>
-                    <span className="body-circle"></span>
-                  </div>
-                </div>
-                <div className="author-details">
-                  <p className="author-name">
-                    {window?.vz_user_quote?.author_name}
-                  </p>
-                  <p>
-                    {window?.vz_user_quote?.createdAt}
-                  </p>
-                </div>
-              </article>
-            </section>
+      }
+      
+      {
+        activePage === 'Products' &&
+        <section className="vz-quote__products">
+          <div className="vz-quote__products-header">
+            <h2>{_('products')}</h2>
+
+            <button className={"toggle-easy-mode " + (easyMode ? '--active' : '')}
+                    onClick={() => setEasyMode(!easyMode)}>
+              { easyMode ? _('advanced-mode') : _('easy-mode') }
+            </button>
+
+            { window?.vz_user_quote?.woocommerce &&
+              <button className="button btn-secondary" onClick={() => copyFromWoocommerce()}>
+                {_('add-from-woocommerce')}
+              </button>
+            }
+            
+            <button className="button btn-secondary" onClick={() => addProduct()}>
+              + {_('add-product')}
+            </button>
+          </div>
+          <ol className="product-list">
+            {
+              productList.length === 0 &&
+              <li className="product-list__item">
+                <p>{_('add-product-to-start')}</p>
+              </li>
+            }
+            {
+              productList.map((product, index) => (
+                <li key={index} className="product-list__item">
+                  <article className="product-card">
+                    <span className="product-list__number">
+                      {index + 1}
+                    </span>
+                    <div className="product-details">
+                      <QuoteInput type="text" 
+                                  title={_('name')} 
+                                  value={product.name}
+                                  className="input__product-name"
+                                  onChange={(e) => updateProduct(index, 'name', e)} />
+                      <QuoteInput type="number"
+                                  className="input__product-quantity"
+                                  title={_('quantity')}
+                                  value={product.quantity}
+                                  onChange={(e) => updateProduct(index, 'quantity', e)} />
+                      {!easyMode &&
+                      <QuoteInput type="text"
+                                  title={_('description')}
+                                  className="product-description"
+                                  value={product.description}
+                                  onChange={(e) => updateProduct(index, 'description', e)} />
+                      }
+                      {!easyMode &&
+                      <QuoteInput type="number"
+                                  title={_('price')}
+                                  className="product-price"
+                                  value={product.price}
+                                  onChange={(e) => updateProduct(index, 'price', e)} /> 
+                      }
+                      {!easyMode &&
+                      <QuoteInput type="text" 
+                                  title={_('sku')} 
+                                  value={product.sku}
+                                  onChange={(e) => updateProduct(index, 'sku', e)} />
+                      }
+                    </div>
+                    {
+                      !easyMode &&
+                      <p className="product-subtotal"> { formatMoney(product.price * product.quantity) } </p>
+                    }
+                    <div className="product-actions">
+                      <button className="button-add-after" onClick={() => addProductAtIndex(index)}>
+                        {_('add-product')}
+                      </button>
+                      <button className="button-remove" onClick={removeProduct(index)}>
+                        {_('remove')}
+                      </button>
+                    </div>
+                  </article>
+                </li>
+              ))
+            }
+          </ol>
+
+          <section className="vz-quote__totals">
+            <div className="vz-quote__subtotal">
+              <h3>{_('subtotal')}</h3>
+              <p>{formatMoney(getSubtotal())}</p>
+            </div>
+
+            <div className="vz-quote__vat">
+              <h3>{_('vat')}</h3>
+              <p>{quoteOptions.vat * 100}%</p>
+            </div>
+
+            <div className="vz-quote__total">
+              <h2>{_('total')}</h2>
+              <p>{formatMoney(getTotal())}</p>
+            </div>
+          </section>
+        </section>
+      }
+
+      { activePage === 'Options' &&
+        <section className="vz-quote__options">
+          <h2>{_('options')}</h2>
+
+
+
+          {window?.vz_user_quote?.can_edit_vat &&
+          <QuoteInput type="number"
+                      title={_('vat')}
+                      value={quoteOptions.vat * 100}
+                      onChange={(e) => setQuoteOptions({ ...quoteOptions, vat: e / 100 })} />
+                      
           }
-      </div>
+          <QuoteInput type="textarea"
+                      title={_('notes')}
+                      value={quoteOptions.notes}
+                      onChange={(e) => setQuoteOptions({ ...quoteOptions, notes: e })} />
+          <div className="privacy-options">
+            <div className="vz-quote__share-link">
+              <input type="text"
+                      disabled
+                     value={getQuoteLink()} />
+              <button className="button btn-primary" onClick={() => copyShareLink()}>
+                {_('copy-link')}
+              </button>
+            </div>
+            {('undefined' !== typeof quoteSlug && quoteSlug === 'new') &&
+              <p className="save-before-sharing-message">
+                {_('save-before-sharing')}
+              </p>
+            }
+            <h4>
+              {_('quote-privacy-header')}
+            </h4>
+            <label>
+              <input type="radio" 
+                    checked={quoteOptions.privacy === 'public'} 
+                    value="public"
+                    onChange={(e) => setQuoteOptions({ ...quoteOptions, privacy: 'public' })} />
+              {_('anyone-with-link')}
+            </label>
+            <label>
+              <input type="radio" 
+                    checked={quoteOptions.privacy === 'password'} 
+                    value="password"
+                    onChange={(e) => setQuoteOptions({ ...quoteOptions, privacy: 'password' })} />
+              {_('password-protected')}
+            </label>
+            {quoteOptions.privacy === 'password' &&
+            <QuoteInput type="password" 
+                        title={_('password')} 
+                        onChange={(e) => setQuoteOptions({ ...quoteOptions, password: e })} />
+            }
+            <label>
+              <input type="radio" 
+                    checked={quoteOptions.privacy === 'private'} 
+                    value="private"
+                    onChange={(e) => setQuoteOptions({ ...quoteOptions, privacy: "private" })} />
+              {_('private')}
+            </label>
+          </div>
+        </section>
+      }
+
+      <footer className="vz-quote__footer">
+        <button className={'button btn-next-step' +
+          (activePage === 'Options' ? ' --save-changes' : '')
+        } onClick={() => nextStepInPage()}>
+          {activePage === 'Options' && _('save-changes')}
+          {activePage !== 'Options' && _('next-step')}
+        </button>
+      </footer>
 
       { responseMessage.title &&
         <article className={

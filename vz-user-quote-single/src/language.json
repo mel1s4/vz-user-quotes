@@ -187,5 +187,81 @@
   "login-success": {
     "en": "Log In Successful. You may now save your changes.",
     "es": "Inicio de sesion exitoso. Ahora puedes guardar tus cambios."
+  },
+  "contact-information": {
+    "en": "Contact Information",
+    "es": "Información de Contacto"
+  },
+  "easy-mode": {
+    "en": "Easy Mode",
+    "es": "Modo Fácil"
+  },
+  "advanced-mode": {
+    "en": "Advanced Mode",
+    "es": "Modo Avanzado"
+  },
+  "success": {
+    "en": "Success",
+    "es": "Éxito"
+  },
+  "error": {
+    "en": "Error",
+    "es": "Error"
+  },
+  "error-saving-quote": {
+    "en": "Error saving quote",
+    "es": "Error guardando presupuesto"
+  },
+  "error-saving-changes": {
+    "en": "Error saving changes",
+    "es": "Error guardando cambios"
+  },
+  "error-copying-products": {
+    "en": "Error copying products",
+    "es": "Error copiando productos"
+  },
+  "error-quote-already-sent": {
+    "en": "Error: Quote already sent",
+    "es": "Error: Presupuesto ya enviado"
+  },
+  "error-logging-in": {
+    "en": "Error logging in",
+    "es": "Error iniciando sesión"
+  },
+  "error-registrating": {
+    "en": "Error registrating",
+    "es": "Error registrando"
+  },
+  "password-protected-message": {
+    "en": "This quote is locked. Please enter the password to unlock it.",
+    "es": "Este presupuesto está bloqueado. Por favor ingresa la contraseña para desbloquearlo."
+  },
+  "unlock": {
+    "en": "Unlock",
+    "es": "Desbloquear"
+  },
+  "login-register-title": {
+    "en": "Please, login or register",
+    "es": "Por favor, inicia sesion o registrate"
+  },
+  "login-register-message": {
+    "en": "To save your changes, you need to login or register",
+    "es": "Para guardar tus cambios, necesitas iniciar sesión o registrarte"
+  },
+  "next-step": {
+    "en": "Next Step",
+    "es": "Siguiente Paso"
+  },
+  "copy-link": {
+    "en": "Copy Link",
+    "es": "Copiar Enlace"
+  },
+  "save-before-sharing": {
+    "en": "Please save your changes before sharing the quote",
+    "es": "Por favor guarda tus cambios antes de compartir el presupuesto"
+  },
+  "link-copied": {
+    "en": "Link copied to clipboard",
+    "es": "Enlace copiado al portapapeles"
   }
 }

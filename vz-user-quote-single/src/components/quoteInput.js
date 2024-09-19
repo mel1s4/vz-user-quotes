@@ -5,7 +5,7 @@ class QuoteInput extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      value: ''
+      value: '',
     };
   }
 
@@ -26,12 +26,13 @@ class QuoteInput extends React.Component {
     this.props.onChange(event.target.value);
   }
 
-  render() {
+  
+  render() {    
     const { type, title } = this.props;
 
     if (type === 'textarea') {
       return (
-        <div className="input-group">
+        <div className={`input-group ${this.props.className} ${this.state.value ? '--filled' : ''}`}>
           <textarea
             onChange={this.handleChange}
             value={this.state.value}
@@ -44,7 +45,7 @@ class QuoteInput extends React.Component {
     }
 
     return (
-      <div className="input-group">
+      <div className={`input-group ${this.props.className} ${this.state.value ? '--filled' : ''}`}>
         <input
           type={type}
           value={this.state.value}

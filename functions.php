@@ -178,6 +178,7 @@ function vz_user_quote_enqueue_scripts() {
         'current_user_can_edit' => vz_current_user_can_edit(get_the_ID()),
         'is_logged_in' => is_user_logged_in(),
         'quote_was_sent' => get_post_meta(get_the_ID(), 'vz-quote-sent', true),
+        'my_quotes_url' => vz_quotes_get_my_quotes_url(),
         'options' => array(
           'subtotal' => get_post_meta(get_the_ID(), 'vz-quote-subtotal', true),
           'vat' => get_post_meta(get_the_ID(), 'vz-quote-vat', true),
@@ -204,6 +205,11 @@ function vz_user_quote_enqueue_scripts() {
     $params['website_language'] = explode('-',get_bloginfo('language'))[0];
     wp_localize_script('vz-user-quote', 'vz_user_quote', $params);
   }
+}
+
+function vz_quotes_get_my_quotes_url() {
+  $my_quotes_url = get_option('vz-user-quotes-settings')['my_quotes_page'];
+  return $my_quotes_url;
 }
 
 add_action('wp_enqueue_scripts', 'vz_user_quote_enqueue_scripts');

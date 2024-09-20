@@ -80,6 +80,10 @@
     "en": "Anyone with the link",
     "es": "Cualquiera con el enlace"
   },
+  "my-quotes": {
+    "en": "My Quotes",
+    "es": "Mis Presupuestos"
+  },
   "options": {
     "en": "Options",
     "es": "Opciones"
@@ -183,6 +187,10 @@
   "registration-success": {
     "en": "Registration Successful. You may now save your changes.",
     "es": "Registro Exitoso. Ahora puedes guardar tus cambios."
+  },
+  "success-changes-saved": {
+    "en": "Changes saved successfully",
+    "es": "Cambios guardados exitosamente"
   },
   "login-success": {
     "en": "Log In Successful. You may now save your changes.",

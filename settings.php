@@ -100,6 +100,10 @@ function vz_user_quotes_register_settings() {
       'title' => 'Terms and Conditions Text',
       'type' => 'text',
     ],
+    'my_quotes_page' => [
+      'title' => 'My Quotes Page',
+      'type' => 'text',
+    ],
   ];
 
   foreach ($fields as $field => $options) {

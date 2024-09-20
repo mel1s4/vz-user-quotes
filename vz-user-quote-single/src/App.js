@@ -65,9 +65,11 @@ function App() {
   function openPasswordModal() {
     setPasswordModalOpen(true);
   }
-
+  const [myQuotesUrl, setMyQuotesUrl] = useState('');
   useEffect(() => {
-
+    if (window?.vz_user_quote?.my_quotes_url) {
+      setMyQuotesUrl(window.vz_user_quote.my_quotes_url);
+    }
     if (window?.vz_user_quote?.quote_slug) {
       setQuoteSlug(window.vz_user_quote.quote_slug);
     }
@@ -83,7 +85,7 @@ function App() {
     if (window?.vz_user_quote?.locked) {
       openPasswordModal();
     }
-    if (!window?.vz_user_quote?.current_user_can_edit) {
+    if (window.vz_user_quote && !window?.vz_user_quote?.current_user_can_edit) {
       console.log('User cannot edit');
       setProtectEdit(true);
     }
@@ -229,9 +231,18 @@ function App() {
     setProductList([...oldProductList, ...newProductList]);
   }
 
+  const [isLoading, setIsLoading] = useState(false);
   async function saveChanges( send = false ) {
+    setIsLoading(true);
+
+    if (isLoading) {
+      return;
+    }
+
+
     if (protectEdit) {
       activateResponseMessage(_('error'), _('error-quote-already-sent'), 'error');
+      setIsLoading(false);
       return;
     }
 
@@ -241,6 +252,7 @@ function App() {
     if (!rest_url || !nonce || !quoteSlug) {
       console.error('No rest_url, nonce or quote_slug found', { rest_url, nonce, quoteSlug });
       activateResponseMessage(_('error'), _('error-saving-quote'), 'error');
+      setIsLoading(false);
       return;
     }
     const params = {
@@ -281,9 +293,11 @@ function App() {
         console.log(jsonData);
         activateResponseMessage(_('error'), _('error-saving-changes'), 'error');
       }
+      setIsLoading(false);
     } catch (error) {
       activateResponseMessage('Error', _('error-saving-changes'), 'error');
       console.error(error);
+      setIsLoading(false);
     }
   }
 
@@ -442,12 +456,12 @@ function App() {
 
   const pageNavigationOptions = [
     {
-      title: _('contact-information'),
-      component: 'ContactInformation',
-    },
-    {
       title: _('products'),
       component: 'Products',
+    },
+    {
+      title: _('contact-information'),
+      component: 'ContactInformation',
     },
     {
       title: _('options'),
@@ -465,14 +479,13 @@ function App() {
     }
   }
 
-  const [activePage, setActivePage] = useState('ContactInformation');
+  const [activePage, setActivePage] = useState('Products');
 
   function setActivePageComponent(component) {
     setActivePage(component);
   }
 
   const [easyMode, setEasyMode] = useState(true);
-
 
   function goBack() {
     window.history.back();
@@ -488,7 +501,7 @@ function App() {
           </button>
         </section>
         <section className="vz-quote__company-details">
-          <h2 className="company-name">
+          <h2 className="vz-header-text company-name">
             {companyDetails.company_name}
           </h2>
           <div className="company-contact">
@@ -508,7 +521,8 @@ function App() {
           </div>
         </section>
         <div className="vz-quote__actions">
-          <button className="button btn-secondary" onClick={() => saveChanges()}>
+          <button className={`button btn-secondary save-changes ${isLoading ? '--loading' : ''}`}	
+                  onClick={() => saveChanges()}>
             {_('save-changes')}
           </button>
           <label>
@@ -524,7 +538,7 @@ function App() {
       { !userIsLoggedIn &&
         <section className="user-details">
           <div className="user-details__header">
-            <h2>{_('login-register-title')}</h2>
+            <h2  className="vz-header-text">{_('login-register-title')}</h2>
             <p>
               {_('login-register-message')}
             </p>
@@ -533,7 +547,7 @@ function App() {
             loginOrRegister === 'login' &&
             <div className="login">
               <div className="vz-quote__products-header">
-                <h3>{_('login-header')}</h3>
+                <h3  className="vz-header-text">{_('login-header')}</h3>
                 <p className='toggle-login-register'>
                     {_('register-instead')} <button className="link" onClick={() => toggleLoginRegister()}>{_('register-button')}</button>
                 </p>
@@ -557,7 +571,7 @@ function App() {
             <div className="register">
 
               <div className="vz-quote__products-header">
-                <h3>{_('register-header')}</h3>
+                <h3  className="vz-header-text">{_('register-header')}</h3>
                 <p className='toggle-login-register'>
                   {_('login-instead')} <button className="link" onClick={() => toggleLoginRegister()}>{_('login-button')}</button>
                 </p>
@@ -596,11 +610,18 @@ function App() {
                 </button>
               </li>
             )) }
+            <li>
+              <a className='button btn-secondary' 
+                 target="_blank"
+                 href={myQuotesUrl}>
+                {_('my-quotes')}
+              </a>
+            </li>
         </ul>
       </nav>
       { activePage === 'ContactInformation' &&
         <section className="client-details">
-          <h2>{_('client-details')}</h2>
+          <h2  className="vz-header-text">{_('client-details')}</h2>
           {
             Object.keys(clientDetails).map((key, index) => (
               <QuoteInput key={index} 
@@ -617,7 +638,7 @@ function App() {
         activePage === 'Products' &&
         <section className="vz-quote__products">
           <div className="vz-quote__products-header">
-            <h2>{_('products')}</h2>
+            <h2  className="vz-header-text">{_('products')}</h2>
 
             <button className={"toggle-easy-mode " + (easyMode ? '--active' : '')}
                     onClick={() => setEasyMode(!easyMode)}>
@@ -700,17 +721,17 @@ function App() {
 
           <section className="vz-quote__totals">
             <div className="vz-quote__subtotal">
-              <h3>{_('subtotal')}</h3>
+              <h3  className="vz-header-text">{_('subtotal')}</h3>
               <p>{formatMoney(getSubtotal())}</p>
             </div>
 
             <div className="vz-quote__vat">
-              <h3>{_('vat')}</h3>
+              <h3  className="vz-header-text">{_('vat')}</h3>
               <p>{quoteOptions.vat * 100}%</p>
             </div>
 
             <div className="vz-quote__total">
-              <h2>{_('total')}</h2>
+              <h2  className="vz-header-text">{_('total')}</h2>
               <p>{formatMoney(getTotal())}</p>
             </div>
           </section>
@@ -719,7 +740,7 @@ function App() {
 
       { activePage === 'Options' &&
         <section className="vz-quote__options">
-          <h2>{_('options')}</h2>
+          <h2  className="vz-header-text">{_('options')}</h2>
 
 
 
@@ -748,7 +769,7 @@ function App() {
                 {_('save-before-sharing')}
               </p>
             }
-            <h4>
+            <h4 className="vz-header-text">
               {_('quote-privacy-header')}
             </h4>
             <label>
@@ -794,7 +815,7 @@ function App() {
         <article className={
           `response-message --${responseMessage.type} ${closeResponseMessageAnimation ? '--closing' : ''}`
         }>
-          <h3>
+          <h3  className="vz-header-text">
             {responseMessage.title}
           </h3>
           <p>
@@ -802,7 +823,7 @@ function App() {
           </p>
           <button class="btn-close" 
                   onClick={() => closeResponseMessage()}>
-            ✕
+            Close
           </button>
         </article>
       }
@@ -810,7 +831,7 @@ function App() {
       { passwordModalOpen &&
         <article className="password-modal">
           <form method="post">
-            <h2>
+            <h2  className="vz-header-text">
               {_('password-protected')}
             </h2>
             <p>

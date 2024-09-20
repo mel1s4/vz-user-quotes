@@ -4,7 +4,7 @@
  * Plugin Name: Viroz User Quotes
  * Plugin URI: https://viroz.studio/portfolio/user-quotes/
  * Description: Creates a new post type for user quotes and allows users to create, edit and download their quotes.
- * Version: 0.5.1
+ * Version: 0.5.2
  * Author: Melisa Viroz
  * Author URI: https://melisaviroz.com
  * License: GPL-2.0+
